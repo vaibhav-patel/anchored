@@ -2,9 +2,6 @@
 
 **Grounded, eval-instrumented agentic RAG — every answer anchored to verifiable evidence.**
 
-> Built in public. The thesis: you don't earn depth by consuming tutorials — you earn it by
-> shipping one hard system, breaking it on purpose, measuring the breakage, and writing up why.
-
 `anchored` is a retrieval-and-reasoning assistant over a messy legal corpus
 ([CUAD](https://www.atticusprojectai.org/cuad) — commercial contracts). It plans and executes
 retrieval, reasons across agents, and returns **cited, verifiable** answers — with an eval
