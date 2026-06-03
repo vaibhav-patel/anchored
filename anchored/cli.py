@@ -46,9 +46,23 @@ def health() -> None:
 
 
 @app.command()
-def data() -> None:
-    """Download + verify the CUAD corpus. (Implemented in #2.)"""
-    typer.secho("Not implemented yet — tracked in issue #2.", fg="yellow")
+def data(
+    force: bool = typer.Option(False, "--force", help="Re-download even if the zip exists"),
+) -> None:
+    """Download + verify the CUAD corpus, then report sanity counts."""
+    from anchored.ingest import cuad
+
+    typer.echo(f"Acquiring CUAD into {settings.data_dir}/raw (license: {cuad.CUAD_LICENSE}) ...")
+    stats = cuad.acquire(settings.data_dir, force=force)
+
+    for key, value in stats.as_dict().items():
+        typer.echo(f"  {key} = {value}")
+
+    warnings = cuad.verify_stats(stats)
+    if warnings:
+        typer.secho("Sanity warnings: " + "; ".join(warnings), fg="yellow")
+        raise typer.Exit(code=1)
+    typer.secho("CUAD acquired and verified.", fg="green")
 
 
 @app.command()
