@@ -37,6 +37,7 @@ services:
       - ./evals:/app/evals
       - ./data:/app/data
       - ./traces:/app/traces
+      - ./BASELINE.md:/app/BASELINE.md
       - model_cache:/models
     ports:
       - "8000:8000"

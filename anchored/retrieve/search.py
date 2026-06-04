@@ -25,23 +25,31 @@ def dense_search(
     k: int | None = None,
     index: str | None = None,
     es: Elasticsearch | None = None,
+    contract_id: str | None = None,
     trace: bool = True,
 ) -> list[RetrievedChunk]:
-    """Embed the query and return the top-k most similar chunks (cosine kNN)."""
+    """Embed the query and return the top-k most similar chunks (cosine kNN).
+
+    If ``contract_id`` is given, retrieval is restricted to that contract's chunks — the
+    realistic contract-review task (find clause X within *this* document).
+    """
     top_k = k or settings.top_k
     name = index or settings.es_index
     client = es or get_client()
 
     t0 = time.perf_counter()
     vector = embed_query(query)
+    knn: dict = {
+        "field": "embedding",
+        "query_vector": vector,
+        "k": top_k,
+        "num_candidates": max(top_k * 10, 100),
+    }
+    if contract_id is not None:
+        knn["filter"] = {"term": {"contract_id": contract_id}}
     resp = client.search(
         index=name,
-        knn={
-            "field": "embedding",
-            "query_vector": vector,
-            "k": top_k,
-            "num_candidates": max(top_k * 10, 100),
-        },
+        knn=knn,
         source_excludes=["embedding"],
         size=top_k,
     )

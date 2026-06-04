@@ -153,9 +153,43 @@ def trace(
 
 
 @app.command()
-def baseline() -> None:
-    """Run the retrieval eval and write BASELINE.md. (Implemented in #5.)"""
-    typer.secho("Not implemented yet — tracked in issue #5.", fg="yellow")
+def baseline(
+    per_category: int = typer.Option(5, help="Max eval cases per clause category"),
+    max_cases: int = typer.Option(None, help="Cap total cases (default: all categories)"),
+) -> None:
+    """Build the eval set, run retrieval eval, and write BASELINE.md."""
+    from pathlib import Path
+
+    from evals.baseline_report import write_baseline_md
+    from evals.dataset import build_cases, write_dataset
+    from evals.retrieval_eval import evaluate
+
+    typer.echo("Building eval set from CUAD annotations ...")
+    cases, stats = build_cases(
+        settings.data_dir, per_category=per_category, max_cases=max_cases
+    )
+    dataset_path = Path("evals") / "cuad_retrieval.jsonl"
+    write_dataset(cases, dataset_path)
+    typer.echo(
+        f"  {stats['emitted']} cases across {stats['categories']} categories "
+        f"(unaligned dropped: {stats['unaligned']}) → {dataset_path}"
+    )
+
+    typer.echo(f"Evaluating dense retrieval over {len(cases)} cases (scoped to contract) ...")
+    report = evaluate(cases)
+
+    # A small unscoped comparison run quantifies *why* we scope (corpus-wide loses signal).
+    sample = cases[: min(40, len(cases))]
+    report.unscoped_recall_at_5 = evaluate(sample, scoped_to_contract=False).recall_at_5
+
+    out = Path("BASELINE.md")
+    write_baseline_md(out, report, stats, settings)
+    typer.secho(
+        f"recall@5={report.recall_at_5}  recall@10={report.recall_at_10}  "
+        f"precision@5={report.precision_at_5}  (n={report.n_cases})",
+        fg="green",
+    )
+    typer.secho(f"Wrote {out}", fg="green")
 
 
 if __name__ == "__main__":
