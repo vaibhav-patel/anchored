@@ -50,6 +50,11 @@ ask: ## Ask a question, e.g. make ask Q="termination clause?" (#3)
 trace: ## Inspect retrieval traces (summary + recent events)
 	$(EXEC) trace
 
+notebook: ## Rebuild + execute the exploration notebook (charts baked in)
+	$(DC) exec app python notebooks/build_explore.py
+	$(DC) exec app jupyter nbconvert --to notebook --execute --inplace \
+		--ExecutePreprocessor.timeout=300 notebooks/01_explore.ipynb
+
 baseline: ## Run the retrieval eval + write BASELINE.md (#5)
 	$(EXEC) baseline
 

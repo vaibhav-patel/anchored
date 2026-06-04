@@ -111,6 +111,14 @@ at Phase 1: **hybrid (BM25 + dense)**, **reranking**, and **better chunking** fo
 clauses. A relevance threshold would also catch out-of-distribution queries (e.g. asking for
 "Connecticut discussions" returns a confident-but-wrong span at ~0.81).
 
+## Explore
+
+[`notebooks/01_explore.ipynb`](notebooks/01_explore.ipynb) is a worked exploration of the
+corpus and the retriever — clause-prevalence and length distributions, recall-by-category
+charts, hit-vs-miss score distributions, and concrete **good-case / bad-case** retrieval
+walk-throughs (including the confidently-wrong out-of-distribution query). Source lives in
+`notebooks/build_explore.py` (regenerate with `make notebook`).
+
 ## Contributing
 
 This is a learning-in-public build. Issues, ideas, and PRs are welcome once the Week 1
