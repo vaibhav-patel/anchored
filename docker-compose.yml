@@ -30,13 +30,23 @@ services:
       - .env
     environment:
       - ES_URL=http://elasticsearch:9200
+      - FASTEMBED_CACHE_PATH=/models
+      - OMP_NUM_THREADS=3
     volumes:
       - ./anchored:/app/anchored
       - ./evals:/app/evals
       - ./data:/app/data
       - ./traces:/app/traces
+      - model_cache:/models
+    # Cap resources so an embedding run can never starve the host machine.
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 3g
     # Keep the container alive for `docker compose exec app ...` / make targets.
     command: ["sleep", "infinity"]
 
 volumes:
   es_data:
+  model_cache:
