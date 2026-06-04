@@ -2,7 +2,7 @@
 
 > The measured starting line for **anchored**. Naive dense retrieval over CUAD. These numbers exist to be beaten — every later fix is justified by moving them.
 
-_Generated 2026-06-04 09:25 UTC_
+_Generated 2026-06-04 09:48 UTC_
 
 ## Headline metrics
 
