@@ -7,6 +7,7 @@ LLM-synthesized answer.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -16,6 +17,9 @@ from pydantic import BaseModel, Field
 from anchored.config import settings
 from anchored.index.build import get_client
 from anchored.retrieve.search import dense_search
+
+# Tag traces originating from the web demo so analysis can split cli vs api.
+os.environ.setdefault("ANCHORED_TRACE_SOURCE", "api")
 
 app = FastAPI(title="anchored — retrieval demo")
 

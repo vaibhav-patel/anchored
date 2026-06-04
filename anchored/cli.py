@@ -124,6 +124,35 @@ def ask(
 
 
 @app.command()
+def trace(
+    n: int = typer.Option(5, "--tail", help="Show the last N trace records"),
+    summary: bool = typer.Option(False, "--summary", help="Print aggregate stats only"),
+) -> None:
+    """Inspect retrieval traces (tail recent events or summarize all of them)."""
+    import json
+
+    from anchored.trace import reader
+
+    stats = reader.summarize()
+    if stats["traces"] == 0:
+        typer.secho("No traces yet — run `anchored ask` first.", fg="yellow")
+        raise typer.Exit()
+
+    typer.echo(json.dumps(stats, indent=2))
+    if summary:
+        return
+
+    typer.echo(f"\nLast {n} traces:")
+    records = list(reader.read_traces())
+    for rec in records[-n:]:
+        ts = rec.get("top_score") or (rec.get("scores") or [None])[0]
+        typer.echo(
+            f"  [{rec.get('source', '?')}] {rec.get('latency_ms', '?')}ms "
+            f"top={ts} k={rec.get('k')} :: {rec.get('query', '')[:60]}"
+        )
+
+
+@app.command()
 def baseline() -> None:
     """Run the retrieval eval and write BASELINE.md. (Implemented in #5.)"""
     typer.secho("Not implemented yet — tracked in issue #5.", fg="yellow")
