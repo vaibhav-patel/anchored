@@ -38,14 +38,16 @@ services:
       - ./data:/app/data
       - ./traces:/app/traces
       - model_cache:/models
+    ports:
+      - "8000:8000"
     # Cap resources so an embedding run can never starve the host machine.
     deploy:
       resources:
         limits:
           cpus: "3.0"
           memory: 3g
-    # Keep the container alive for `docker compose exec app ...` / make targets.
-    command: ["sleep", "infinity"]
+    # Serve the demo UI; still exec-able for ingest/index/baseline.
+    command: ["uvicorn", "anchored.api:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:
   es_data:

@@ -41,9 +41,17 @@ git clone https://github.com/vaibhav-patel/anchored.git
 cd anchored
 cp .env.example .env        # configure (no secrets needed for the baseline)
 make data                   # download + verify CUAD
-docker compose up --build   # ingest → index → serve
+docker compose up --build   # start Elasticsearch + the app
+make ingest && make index   # process → embed → index (one-time, ~30 min on CPU)
 make baseline               # produce BASELINE.md numbers
 ```
+
+## Demo
+
+With the stack up and the corpus indexed, open **http://localhost:8000** (or `make ui`) to
+see retrieval in action — ask a question and watch the top-k contract spans come back, each
+anchored to its exact clause (contract, char range, similarity score). Retrieval-only for
+now; LLM-synthesized answers come later.
 
 ## Contributing
 

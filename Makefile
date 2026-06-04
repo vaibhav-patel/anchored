@@ -8,10 +8,14 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-up: ## Build + start Elasticsearch and the app
+up: ## Build + start Elasticsearch and the app (UI at http://localhost:8000)
 	$(DC) up --build -d
 	@echo "Waiting for the stack to be healthy..."
 	@$(DC) ps
+	@echo "\nDemo UI → http://localhost:8000"
+
+ui: ## Open the demo UI in a browser
+	@open http://localhost:8000 || xdg-open http://localhost:8000 || echo "Open http://localhost:8000"
 
 down: ## Stop and remove containers
 	$(DC) down
