@@ -19,7 +19,10 @@ Most RAG demos answer a question and stop. `anchored` is built around the opposi
 
 ## Status
 
-🚧 **Week 1 — Foundations.** Document processing + naive RAG baseline.
+✅ **Week 1 — Foundations complete.** A measurable, traced, demo-able naive RAG baseline
+over CUAD, with a from-scratch eval harness. See the [results](#baseline-results-2026-06-04)
+below and [`BASELINE.md`](BASELINE.md) for the live numbers. Next: Phase 1 — breaking
+retrieval on purpose (hybrid + reranking).
 
 ## Stack
 
@@ -27,12 +30,12 @@ Everything runs in Docker — `docker compose up` and a stranger can reproduce t
 
 | Layer | Choice (Week 1) |
 |---|---|
-| Corpus | CUAD (510 commercial contracts, 41 clause categories) |
-| Doc processing | Python pipeline → normalized text → chunks |
-| Embeddings | `BAAI/bge-small-en-v1.5` (local, CPU-friendly) |
-| Vector store | Qdrant |
-| Generation | Ollama (local, optional) / OpenAI-compatible fallback |
-| Eval | Recall@k / Precision@k on CUAD's labeled spans (own harness first) |
+| Corpus | CUAD v1 (510 commercial contracts, 41 clause categories) |
+| Doc processing | Python pipeline → normalized text → token chunks (tiktoken `cl100k_base`, 512/64) |
+| Embeddings | `BAAI/bge-small-en-v1.5` via fastembed (local, CPU, 384-dim cosine) |
+| Vector store | **Elasticsearch 8.13** (`dense_vector` kNN + BM25 `text` field, hybrid-ready) |
+| Generation | Ollama (local, optional) / OpenAI-compatible fallback — *not yet wired (Phase 2)* |
+| Eval | Recall@k / Precision@k on CUAD's labeled spans — **own harness, no framework** |
 
 ## Quickstart
 
@@ -52,6 +55,61 @@ With the stack up and the corpus indexed, open **http://localhost:8000** (or `ma
 see retrieval in action — ask a question and watch the top-k contract spans come back, each
 anchored to its exact clause (contract, char range, similarity score). Retrieval-only for
 now; LLM-synthesized answers come later.
+
+## Baseline results (2026-06-04)
+
+Naive single-vector dense retrieval, scoped to the target contract (the realistic
+contract-review task: *find clause X in this document*). Full breakdown in
+[`BASELINE.md`](BASELINE.md); methodology in [`docs/notes/week-01.md`](docs/notes/week-01.md).
+
+**Dataset:** [CUAD v1](https://www.atticusprojectai.org/cuad) (CC BY 4.0) — 510 commercial
+contracts, 41 expert-annotated clause categories, 20,910 questions (6,702 answerable).
+Indexed as **12,572 chunks**. The eval set is **205 labeled cases** (5 per category × 41),
+gold spans relocated into normalized contract text by exact match (0 unaligned).
+
+| Metric | Value |
+|---|---|
+| **recall@5** | **0.68** |
+| **recall@10** | **0.81** |
+| **precision@5** | **0.19** ¹ |
+| cases | 205 |
+
+¹ precision@5 has a low ceiling here — gold spans are sparse (~1–2 relevant chunks per
+contract), so even perfect retrieval caps around 0.2–0.4. Read it as a relative signal.
+
+> **Why scope to the contract?** CUAD's question text is a generic template (identical
+> across all 510 contracts), so a corpus-wide query carries no signal about *which* contract
+> to search. The same eval **unscoped** collapses to recall@5 ≈ **0.18** — proof that pooling
+> contracts would measure document disambiguation, not clause retrieval.
+
+### ✅ Working well (recall@10 = 1.0 — 14 of 41 categories)
+
+Short, formulaic, lexically distinctive clauses are easy for dense retrieval:
+
+`Cap On Liability` · `Uncapped Liability` · `Change Of Control` · `Anti-Assignment` ·
+`Expiration Date` · `Effective Date` · `Minimum Commitment` · `Post-Termination Services` ·
+`Warranty Duration` · `Third Party Beneficiary` · `Price Restrictions` ·
+`Joint IP Ownership` · `Non-Compete` · `Insurance`
+
+(`Governing Law`, `Parties`, and `Audit Rights` are also strong at recall@10 = 0.8.)
+
+### ❌ Failure modes (where naive retrieval breaks — Phase 1 targets)
+
+| Category | recall@5 | recall@10 | Why it's hard |
+|---|---|---|---|
+| Unlimited/All-You-Can-Eat-License | 0.0 | 0.2 | defined-term, diffuse, cross-referential |
+| Volume Restriction | 0.4 | 0.4 | rare/negotiated, long-tail vocabulary |
+| Most Favored Nation | 0.2 | 0.6 | concept spread across multiple sentences |
+| Exclusivity | 0.4 | 0.6 | implied by context, not a labeled heading |
+| Non-Transferable License | 0.4 | 0.6 | defined-term license language |
+| Covenant Not To Sue | 0.2 | 0.8 | relevant chunk retrieved but out-of-top-5 |
+
+**The pattern:** misses cluster on clauses needing **lexical / exact-term** signal (defined
+terms, section labels) that a single dense vector smooths away — and on "right chunk, wrong
+rank" cases (top score 0.79–0.86, relevant chunk just outside top-k). That points squarely
+at Phase 1: **hybrid (BM25 + dense)**, **reranking**, and **better chunking** for diffuse
+clauses. A relevance threshold would also catch out-of-distribution queries (e.g. asking for
+"Connecticut discussions" returns a confident-but-wrong span at ~0.81).
 
 ## Contributing
 
