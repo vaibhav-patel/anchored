@@ -35,6 +35,7 @@ services:
     volumes:
       - ./anchored:/app/anchored
       - ./evals:/app/evals
+      - ./notebooks:/app/notebooks
       - ./data:/app/data
       - ./traces:/app/traces
       - ./BASELINE.md:/app/BASELINE.md

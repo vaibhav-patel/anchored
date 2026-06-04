@@ -19,7 +19,7 @@ WORKDIR /app
 # Install dependencies first (better layer caching).
 COPY pyproject.toml README.md ./
 COPY anchored ./anchored
-RUN uv pip install --system -e ".[dev]"
+RUN uv pip install --system -e ".[dev,notebook]"
 
 # Source is bind-mounted at runtime via compose for fast iteration.
 CMD ["sleep", "infinity"]

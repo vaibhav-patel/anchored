@@ -26,6 +26,13 @@ dev = [
     "ruff>=0.4",
     "pytest>=8.2",
 ]
+notebook = [
+    "pandas>=2.2",
+    "matplotlib>=3.8",
+    "jupyter>=1.0",
+    "nbconvert>=7.16",
+    "nbformat>=5.10",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -37,6 +44,13 @@ packages = ["anchored"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# Notebooks follow notebook conventions (semicolons to suppress output, etc.); we lint the
+# builder script (notebooks/build_explore.py) instead.
+extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# The notebook builder embeds markdown/table strings that exceed the line length.
+"notebooks/build_explore.py" = ["E501"]
