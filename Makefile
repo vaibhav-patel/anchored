@@ -47,6 +47,9 @@ index: ## Embed chunks + build the Elasticsearch index (#3)
 ask: ## Ask a question, e.g. make ask Q="termination clause?" (#3)
 	$(EXEC) ask "$(Q)"
 
+trace: ## Inspect retrieval traces (summary + recent events)
+	$(EXEC) trace
+
 baseline: ## Run the retrieval eval + write BASELINE.md (#5)
 	$(EXEC) baseline
 

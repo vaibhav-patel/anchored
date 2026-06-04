@@ -58,7 +58,9 @@ def dense_search(
                 "query": query,
                 "k": top_k,
                 "index": name,
+                "embed_model": settings.embed_model,
                 "latency_ms": round(latency_ms, 2),
+                "num_results": len(results),
                 "retrieved_chunk_ids": [r.chunk.chunk_id for r in results],
                 "scores": [round(r.score, 4) for r in results],
             }
